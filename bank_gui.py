@@ -130,6 +130,10 @@ class BankApp:
         welcome_text = f"Welcome {self.current_user.capitalize()}"
         ctk.CTkLabel(dashboard_frame, text=welcome_text, font=("Arial", 24)).pack(pady=20)
         
+        # Add account number display
+        account_text = f"Account Number: {self.account_number}"
+        ctk.CTkLabel(dashboard_frame, text=account_text, font=("Arial", 16)).pack(pady=5)
+        
         # Balance display
         def update_balance_label():
             bobj = Bank(self.current_user, self.account_number)
@@ -152,10 +156,17 @@ class BankApp:
             def process_deposit():
                 try:
                     amount = int(amount_entry.get())
+                    if amount <= 0:
+                        messagebox.showerror("Error", "Please enter a positive amount")
+                        return
+                        
                     bobj = Bank(self.current_user, self.account_number)
-                    bobj.deposit(amount)
-                    update_balance_label()
-                    deposit_window.destroy()
+                    if bobj.deposit(amount):
+                        update_balance_label()
+                        deposit_window.destroy()
+                        messagebox.showinfo("Success", f"Successfully deposited ₹{amount}")
+                    else:
+                        messagebox.showerror("Error", "Failed to deposit amount")
                 except ValueError:
                     messagebox.showerror("Error", "Please enter a valid amount")
             
@@ -198,15 +209,27 @@ class BankApp:
                 try:
                     receiver = int(receiver_entry.get())
                     amount = int(amount_entry.get())
+                    
+                    if amount <= 0:
+                        messagebox.showerror("Error", "Please enter a positive amount")
+                        return
+                        
+                    if receiver == self.account_number:
+                        messagebox.showerror("Error", "Cannot transfer to your own account")
+                        return
+                        
                     bobj = Bank(self.current_user, self.account_number)
-                    bobj.fundtransfer(receiver, amount)
-                    update_balance_label()
-                    transfer_window.destroy()
+                    if bobj.fundtransfer(receiver, amount):
+                        update_balance_label()
+                        transfer_window.destroy()
+                        messagebox.showinfo("Success", f"Successfully transferred ₹{amount} to account {receiver}")
+                    else:
+                        messagebox.showerror("Error", "Transfer failed. Please check account number and balance.")
                 except ValueError:
                     messagebox.showerror("Error", "Please enter valid details")
             
             ctk.CTkButton(transfer_window, text="Transfer", command=process_transfer).pack(pady=10)
-        
+
         # Dashboard buttons
         ctk.CTkButton(dashboard_frame, text="Deposit", command=show_deposit).pack(pady=10)
         ctk.CTkButton(dashboard_frame, text="Withdraw", command=show_withdraw).pack(pady=10)
